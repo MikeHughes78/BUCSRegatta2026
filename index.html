@@ -411,11 +411,17 @@ async function fetchData() {
   board.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading results&hellip;</p></div>';
 
   try {
-    // Add cache-buster
-    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
-    const resp = await fetch(url);
+    // Try direct CSV fetch first
+    const url = SHEET_CSV_URL + '&_t=' + Date.now();
+    const resp = await fetch(url, { redirect: 'follow' });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const csv = await resp.text();
+
+    // Check we actually got CSV, not an HTML error page
+    if (csv.trim().startsWith('<!') || csv.trim().startsWith('<html')) {
+      throw new Error('Got HTML instead of CSV — sheet may not be published');
+    }
+
     parseCSV(csv);
     document.getElementById('updatedTime').innerHTML =
       '<span class="dot"></span>Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -425,15 +431,21 @@ async function fetchData() {
     setTimeout(fetchData, 60000);
   } catch (err) {
     const banner = document.getElementById('errorBanner');
-    banner.textContent = 'Could not load data. Check your Sheet URL and ensure it's published.';
+    banner.textContent = 'Could not load data — check browser console for details.';
     banner.style.display = 'block';
-    board.innerHTML = '<div class="empty-state"><div class="icon">📡</div><p>Unable to connect to the spreadsheet.<br>Check the published URL and try again.</p></div>';
-    console.error(err);
+    board.innerHTML = '<div class="empty-state"><div class="icon">📡</div><p>Unable to connect to the spreadsheet.<br>Check the published URL and try refreshing.</p></div>';
+    console.error('Fetch error:', err);
+    // Retry in 30s
+    setTimeout(fetchData, 30000);
   }
 }
 
 function parseCSV(csv) {
   const lines = csv.trim().split('\n');
+  console.log('CSV rows received:', lines.length);
+  console.log('First row (header):', lines[0]);
+  if (lines.length > 1) console.log('Sample data row:', lines[1]);
+
   // Skip header row
   const rows = lines.slice(1).map(line => {
     // Handle quoted CSV fields
@@ -449,8 +461,11 @@ function parseCSV(csv) {
     return fields;
   });
 
+  console.log('Parsed data rows:', rows.length);
+
   // Build leaderboards
   data = {};
+  let totalPoints = 0;
   for (const key of TAB_KEYS) {
     const col = COL_MAP[key];
     const entries = rows
@@ -459,7 +474,13 @@ function parseCSV(csv) {
       .filter(e => e.pts > 0)
       .sort((a, b) => b.pts - a.pts);
     data[key] = entries;
+    totalPoints += entries.reduce((s, e) => s + e.pts, 0);
   }
+
+  // Store whether we got a valid connection (even if no points yet)
+  data._connected = rows.length > 0;
+  data._hasResults = totalPoints > 0;
+  console.log('Connected:', data._connected, 'Has results:', data._hasResults, 'Total points:', totalPoints);
 }
 
 // ─── RENDER ───
@@ -468,7 +489,13 @@ function render() {
   const entries = data[activeTab] || [];
 
   if (entries.length === 0) {
-    board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>No results yet!<br>Check back once racing begins.</p></div>';
+    if (data._connected && !data._hasResults) {
+      board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>Sheet connected successfully!<br>No results entered yet — the leaderboard will update automatically once club names are added to the Events sheet.</p></div>';
+    } else if (data._connected) {
+      board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>No results in this category yet.<br>Try another tab above.</p></div>';
+    } else {
+      board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>No results yet!<br>Check back once racing begins.</p></div>';
+    }
     return;
   }
 
