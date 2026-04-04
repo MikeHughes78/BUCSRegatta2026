@@ -8,42 +8,46 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #0c1d2e;
-    --navy-mid: #142d44;
-    --navy-light: #1a3c5e;
-    --sky: #4da8da;
-    --sky-pale: #a8d8ea;
-    --gold: #e8b931;
-    --silver: #b8c4ce;
-    --bronze: #c07a3e;
-    --white: #f4f7fa;
-    --text: #e8edf2;
-    --text-dim: #8a9bb0;
-    --card-bg: rgba(20, 45, 68, 0.65);
-    --card-border: rgba(77, 168, 218, 0.15);
-    --row-alt: rgba(77, 168, 218, 0.06);
-    --row-hover: rgba(77, 168, 218, 0.12);
+    --primary: #97D5EB;
+    --primary-dark: #5bb8d4;
+    --primary-deeper: #2e8bab;
+    --primary-pale: #d0eef7;
+    --primary-ghost: #e8f6fb;
+    --gold: #d4a017;
+    --gold-bg: #fdf6e3;
+    --silver: #8a9baa;
+    --silver-bg: #f0f3f6;
+    --bronze: #b87333;
+    --bronze-bg: #faf0e6;
+    --white: #ffffff;
+    --bg: #f8fcfd;
+    --text: #2c3e4a;
+    --text-dim: #7a909e;
+    --card-bg: #ffffff;
+    --card-border: rgba(151, 213, 235, 0.35);
+    --row-alt: rgba(151, 213, 235, 0.08);
+    --row-hover: rgba(151, 213, 235, 0.15);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'DM Sans', -apple-system, sans-serif;
-    background: var(--navy);
+    background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* Atmospheric background */
+  /* Subtle background texture */
   body::before {
     content: '';
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background:
-      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(77,168,218,0.08) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(77,168,218,0.05) 0%, transparent 50%),
-      linear-gradient(180deg, #0a1824 0%, #0c1d2e 40%, #10253a 100%);
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(151,213,235,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(151,213,235,0.08) 0%, transparent 50%),
+      linear-gradient(180deg, #f2fafe 0%, #f8fcfd 40%, #ffffff 100%);
     z-index: -1;
   }
 
@@ -66,9 +70,9 @@
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--sky);
-    background: rgba(77,168,218,0.1);
-    border: 1px solid rgba(77,168,218,0.2);
+    color: var(--primary-deeper);
+    background: var(--primary-ghost);
+    border: 1px solid var(--card-border);
     padding: 0.3rem 0.9rem;
     border-radius: 100px;
     margin-bottom: 0.6rem;
@@ -78,11 +82,11 @@
     font-size: clamp(1.6rem, 5vw, 2.4rem);
     font-weight: 400;
     letter-spacing: -0.01em;
-    color: var(--white);
+    color: var(--text);
     line-height: 1.15;
   }
   .header h1 span {
-    color: var(--sky);
+    color: var(--primary-deeper);
   }
   .updated {
     font-size: 0.72rem;
@@ -129,8 +133,8 @@
   }
   .tab:hover { color: var(--text); }
   .tab.active {
-    color: var(--sky);
-    border-bottom-color: var(--sky);
+    color: var(--primary-deeper);
+    border-bottom-color: var(--primary-dark);
   }
 
   /* ─── LEADERBOARD CARD ─── */
@@ -145,8 +149,7 @@
     border: 1px solid var(--card-border);
     border-radius: 14px;
     overflow: hidden;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 12px rgba(151,213,235,0.12), 0 1px 3px rgba(0,0,0,0.04);
   }
 
   /* ─── TOP 3 PODIUM ─── */
@@ -156,7 +159,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 1.5rem 1rem 1rem;
-    background: linear-gradient(180deg, rgba(77,168,218,0.06) 0%, transparent 100%);
+    background: linear-gradient(180deg, var(--primary-ghost) 0%, transparent 100%);
   }
   .podium-slot {
     display: flex;
@@ -184,14 +187,14 @@
     font-size: 1rem;
     background: linear-gradient(135deg, #f5d76e, #d4a017);
     color: #5a3e00;
-    box-shadow: 0 0 20px rgba(232,185,49,0.3);
+    box-shadow: 0 2px 10px rgba(212,160,23,0.25);
   }
   .second .podium-medal {
-    background: linear-gradient(135deg, #dce6ed, #94a7b8);
+    background: linear-gradient(135deg, #e4eaf0, #a8b8c6);
     color: #3a4a56;
   }
   .third .podium-medal {
-    background: linear-gradient(135deg, #dba06b, #9e6030);
+    background: linear-gradient(135deg, #dba06b, #b87333);
     color: #3e2510;
   }
 
@@ -201,7 +204,7 @@
     text-align: center;
     line-height: 1.2;
     margin-bottom: 0.2rem;
-    color: var(--white);
+    color: var(--text);
   }
   .first .podium-name { font-size: 0.85rem; }
 
@@ -221,20 +224,20 @@
   }
   .first .podium-bar {
     height: 64px;
-    background: linear-gradient(180deg, rgba(232,185,49,0.15), rgba(232,185,49,0.04));
-    border: 1px solid rgba(232,185,49,0.15);
+    background: linear-gradient(180deg, var(--gold-bg), rgba(253,246,227,0.3));
+    border: 1px solid rgba(212,160,23,0.15);
     border-bottom: none;
   }
   .second .podium-bar {
     height: 44px;
-    background: linear-gradient(180deg, rgba(184,196,206,0.12), rgba(184,196,206,0.03));
-    border: 1px solid rgba(184,196,206,0.1);
+    background: linear-gradient(180deg, var(--silver-bg), rgba(240,243,246,0.3));
+    border: 1px solid rgba(138,155,170,0.12);
     border-bottom: none;
   }
   .third .podium-bar {
     height: 30px;
-    background: linear-gradient(180deg, rgba(192,122,62,0.12), rgba(192,122,62,0.03));
-    border: 1px solid rgba(192,122,62,0.1);
+    background: linear-gradient(180deg, var(--bronze-bg), rgba(250,240,230,0.3));
+    border: 1px solid rgba(184,115,51,0.12);
     border-bottom: none;
   }
 
@@ -271,7 +274,7 @@
     font-weight: 700;
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
-    color: var(--sky-pale);
+    color: var(--primary-deeper);
     text-align: right;
     min-width: 42px;
   }
@@ -299,8 +302,8 @@
   }
   .spinner {
     width: 32px; height: 32px;
-    border: 3px solid var(--navy-light);
-    border-top-color: var(--sky);
+    border: 3px solid var(--primary-pale);
+    border-top-color: var(--primary-dark);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 1rem;
@@ -312,10 +315,10 @@
   .error-banner {
     margin: 0.75rem;
     padding: 0.75rem 1rem;
-    background: rgba(220, 60, 60, 0.12);
-    border: 1px solid rgba(220, 60, 60, 0.2);
+    background: rgba(220, 60, 60, 0.06);
+    border: 1px solid rgba(220, 60, 60, 0.15);
     border-radius: 10px;
-    color: #e8a0a0;
+    color: #c04040;
     font-size: 0.78rem;
     text-align: center;
     display: none;
@@ -329,7 +332,7 @@
     color: var(--text-dim);
     letter-spacing: 0.04em;
   }
-  .footer a { color: var(--sky); text-decoration: none; }
+  .footer a { color: var(--primary-deeper); text-decoration: none; }
 
   /* hide scrollbar on whole page on mobile */
   @media (max-width: 520px) {
@@ -343,7 +346,7 @@
 
 <div class="header">
   <div class="event-badge">BUCS Regatta 2026</div>
-  <h1>BUCS Regatta <span>Tracker</span></h1>
+  <h1>BUCS Regatta <span>Points Tracker</span></h1>
   <div class="updated" id="updatedTime"></div>
 </div>
 
@@ -352,8 +355,8 @@
   <button class="tab" data-tab="mens_vl" role="tab">Men's VL</button>
   <button class="tab" data-tab="womens_vl" role="tab">Women's VL</button>
   <button class="tab" data-tab="bucs_overall" role="tab">BUCS Points</button>
-  <button class="tab" data-tab="bucs_mens" role="tab">BUCS Points Men</button>
-  <button class="tab" data-tab="bucs_womens" role="tab">BUCS Points Women</button>
+  <button class="tab" data-tab="bucs_mens" role="tab">BUCS Points - Men</button>
+  <button class="tab" data-tab="bucs_womens" role="tab">BUCS Points - Women</button>
 </div>
 
 <div class="error-banner" id="errorBanner"></div>
