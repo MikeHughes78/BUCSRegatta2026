@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BUCS Regatta 2026 — Live Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0c1d2e;
+    --navy-mid: #142d44;
+    --navy-light: #1a3c5e;
+    --sky: #4da8da;
+    --sky-pale: #a8d8ea;
+    --gold: #e8b931;
+    --silver: #b8c4ce;
+    --bronze: #c07a3e;
+    --white: #f4f7fa;
+    --text: #e8edf2;
+    --text-dim: #8a9bb0;
+    --card-bg: rgba(20, 45, 68, 0.65);
+    --card-border: rgba(77, 168, 218, 0.15);
+    --row-alt: rgba(77, 168, 218, 0.06);
+    --row-hover: rgba(77, 168, 218, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Atmospheric background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(77,168,218,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(77,168,218,0.05) 0%, transparent 50%),
+      linear-gradient(180deg, #0a1824 0%, #0c1d2e 40%, #10253a 100%);
+    z-index: -1;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+  }
+  .event-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sky);
+    background: rgba(77,168,218,0.1);
+    border: 1px solid rgba(77,168,218,0.2);
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 0.6rem;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--white);
+    line-height: 1.15;
+  }
+  .header h1 span {
+    color: var(--sky);
+  }
+  .updated {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+  }
+  .updated .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #3ddc84;
+    border-radius: 50%;
+    margin-right: 4px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── TAB BAR ─── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    padding: 1rem 0.75rem 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--sky);
+    border-bottom-color: var(--sky);
+  }
+
+  /* ─── LEADERBOARD CARD ─── */
+  .board-wrap {
+    padding: 0.75rem;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .board {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* ─── TOP 3 PODIUM ─── */
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem 1rem;
+    background: linear-gradient(180deg, rgba(77,168,218,0.06) 0%, transparent 100%);
+  }
+  .podium-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 120px;
+  }
+  .podium-slot.first { order: 2; }
+  .podium-slot.second { order: 1; }
+  .podium-slot.third { order: 3; }
+
+  .podium-medal {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  .first .podium-medal {
+    width: 44px; height: 44px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #f5d76e, #d4a017);
+    color: #5a3e00;
+    box-shadow: 0 0 20px rgba(232,185,49,0.3);
+  }
+  .second .podium-medal {
+    background: linear-gradient(135deg, #dce6ed, #94a7b8);
+    color: #3a4a56;
+  }
+  .third .podium-medal {
+    background: linear-gradient(135deg, #dba06b, #9e6030);
+    color: #3e2510;
+  }
+
+  .podium-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+    color: var(--white);
+  }
+  .first .podium-name { font-size: 0.85rem; }
+
+  .podium-pts {
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .first .podium-pts { color: var(--gold); font-size: 1.1rem; }
+  .second .podium-pts { color: var(--silver); }
+  .third .podium-pts { color: var(--bronze); }
+
+  .podium-bar {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    margin-top: 0.4rem;
+  }
+  .first .podium-bar {
+    height: 64px;
+    background: linear-gradient(180deg, rgba(232,185,49,0.15), rgba(232,185,49,0.04));
+    border: 1px solid rgba(232,185,49,0.15);
+    border-bottom: none;
+  }
+  .second .podium-bar {
+    height: 44px;
+    background: linear-gradient(180deg, rgba(184,196,206,0.12), rgba(184,196,206,0.03));
+    border: 1px solid rgba(184,196,206,0.1);
+    border-bottom: none;
+  }
+  .third .podium-bar {
+    height: 30px;
+    background: linear-gradient(180deg, rgba(192,122,62,0.12), rgba(192,122,62,0.03));
+    border: 1px solid rgba(192,122,62,0.1);
+    border-bottom: none;
+  }
+
+  /* ─── TABLE ROWS ─── */
+  .rows {
+    padding: 0 0 0.25rem;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    transition: background 0.15s;
+  }
+  .row:nth-child(even) { background: var(--row-alt); }
+  .row:hover { background: var(--row-hover); }
+
+  .row-rank {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .row-club {
+    font-weight: 500;
+    font-size: 0.82rem;
+    color: var(--text);
+    padding-right: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-pts {
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--sky-pale);
+    text-align: right;
+    min-width: 42px;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-dim);
+  }
+  .empty-state .icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
+    opacity: 0.4;
+  }
+  .empty-state p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  /* ─── LOADING ─── */
+  .loading {
+    text-align: center;
+    padding: 4rem 1rem;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--navy-light);
+    border-top-color: var(--sky);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { color: var(--text-dim); font-size: 0.8rem; }
+
+  /* ─── ERROR BANNER ─── */
+  .error-banner {
+    margin: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(220, 60, 60, 0.12);
+    border: 1px solid rgba(220, 60, 60, 0.2);
+    border-radius: 10px;
+    color: #e8a0a0;
+    font-size: 0.78rem;
+    text-align: center;
+    display: none;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    text-align: center;
+    padding: 1.5rem 1rem 2.5rem;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+  .footer a { color: var(--sky); text-decoration: none; }
+
+  /* hide scrollbar on whole page on mobile */
+  @media (max-width: 520px) {
+    .board-wrap { padding: 0.5rem; }
+    .podium { padding: 1.2rem 0.5rem 0.8rem; gap: 0.3rem; }
+    .row { padding: 0.55rem 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="event-badge">BUCS Regatta 2026</div>
+  <h1>Victor Ludorum <span>Leaderboard</span></h1>
+  <div class="updated" id="updatedTime"></div>
+</div>
+
+<div class="tabs" id="tabs" role="tablist">
+  <button class="tab active" data-tab="overall_vl" role="tab">Overall</button>
+  <button class="tab" data-tab="mens_vl" role="tab">Men's VL</button>
+  <button class="tab" data-tab="womens_vl" role="tab">Women's VL</button>
+  <button class="tab" data-tab="bucs_overall" role="tab">BUCS</button>
+  <button class="tab" data-tab="bucs_mens" role="tab">BUCS Men</button>
+  <button class="tab" data-tab="bucs_womens" role="tab">BUCS Women</button>
+</div>
+
+<div class="error-banner" id="errorBanner"></div>
+
+<div class="board-wrap">
+  <div class="board" id="board">
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <p>Loading results&hellip;</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Updated live from Google Sheets &middot; <a href="#">BUCS Regatta 2026</a>
+</div>
+
+<script>
+// ─── CONFIG ───
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSa6hutAyunAB6--x0cx_ShY-KXBJsR8v42BXrLlG4JYX3tgV9NXHEgH96FWt6nE0mg8A_uNnorTlr3/pub?gid=1473886220&single=true&output=csv';
+
+// ─── STATE ───
+let data = {};      // { overall_vl: [{club, pts}], mens_vl: [...], ... }
+let activeTab = 'overall_vl';
+
+const TAB_KEYS = ['overall_vl', 'mens_vl', 'womens_vl', 'bucs_overall', 'bucs_mens', 'bucs_womens'];
+// Maps to Calc sheet columns: Club=0, VL Overall=1, VL Men=2, VL Women=3, BUCS Overall=4, BUCS Men=5, BUCS Women=6
+const COL_MAP = {
+  overall_vl: 1,
+  mens_vl: 2,
+  womens_vl: 3,
+  bucs_overall: 4,
+  bucs_mens: 5,
+  bucs_womens: 6
+};
+
+// ─── INIT ───
+function init() {
+  fetchData();
+
+  // Tab clicks
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      activeTab = btn.dataset.tab;
+      render();
+    });
+  });
+}
+
+// ─── FETCH & PARSE ───
+async function fetchData() {
+  const board = document.getElementById('board');
+  board.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading results&hellip;</p></div>';
+
+  try {
+    // Add cache-buster
+    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const csv = await resp.text();
+    parseCSV(csv);
+    document.getElementById('updatedTime').innerHTML =
+      '<span class="dot"></span>Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    render();
+
+    // Auto-refresh every 60s
+    setTimeout(fetchData, 60000);
+  } catch (err) {
+    const banner = document.getElementById('errorBanner');
+    banner.textContent = 'Could not load data. Check your Sheet URL and ensure it's published.';
+    banner.style.display = 'block';
+    board.innerHTML = '<div class="empty-state"><div class="icon">📡</div><p>Unable to connect to the spreadsheet.<br>Check the published URL and try again.</p></div>';
+    console.error(err);
+  }
+}
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  // Skip header row
+  const rows = lines.slice(1).map(line => {
+    // Handle quoted CSV fields
+    const fields = [];
+    let current = '';
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { fields.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    fields.push(current.trim());
+    return fields;
+  });
+
+  // Build leaderboards
+  data = {};
+  for (const key of TAB_KEYS) {
+    const col = COL_MAP[key];
+    const entries = rows
+      .filter(r => r[0] && r[col] !== undefined)
+      .map(r => ({ club: r[0], pts: parseFloat(r[col]) || 0 }))
+      .filter(e => e.pts > 0)
+      .sort((a, b) => b.pts - a.pts);
+    data[key] = entries;
+  }
+}
+
+// ─── RENDER ───
+function render() {
+  const board = document.getElementById('board');
+  const entries = data[activeTab] || [];
+
+  if (entries.length === 0) {
+    board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>No results yet!<br>Check back once racing begins.</p></div>';
+    return;
+  }
+
+  let html = '';
+
+  // Top 3 podium
+  if (entries.length >= 3) {
+    html += '<div class="podium">';
+    const podiumClasses = ['second', 'first', 'third'];
+    const podiumOrder = [1, 0, 2]; // display order: 2nd, 1st, 3rd
+    for (const idx of podiumOrder) {
+      const e = entries[idx];
+      const cls = podiumClasses[podiumOrder.indexOf(idx)];
+      html += `
+        <div class="podium-slot ${['first','second','third'][idx]}">
+          <div class="podium-medal">${idx + 1}</div>
+          <div class="podium-name">${escHtml(e.club)}</div>
+          <div class="podium-pts">${e.pts.toLocaleString()}</div>
+          <div class="podium-bar"></div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  // Remaining rows (from 4th onward, or all if < 3)
+  const startIdx = entries.length >= 3 ? 3 : 0;
+  if (startIdx < entries.length) {
+    html += '<div class="rows">';
+    for (let i = startIdx; i < entries.length; i++) {
+      html += `
+        <div class="row">
+          <div class="row-rank">${i + 1}</div>
+          <div class="row-club">${escHtml(entries[i].club)}</div>
+          <div class="row-pts">${entries[i].pts.toLocaleString()}</div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  board.innerHTML = html;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ─── DEMO MODE ───
+// If no sheet URL and you want to preview with sample data, uncomment below:
+/*
+function loadDemo() {
+  const sample = [
+    ['Edinburgh', 248, 120, 128, 48, 24, 24],
+    ['Durham', 220, 140, 80, 36, 20, 16],
+    ['Brookes', 196, 96, 100, 32, 16, 16],
+    ['Bristol', 180, 88, 92, 28, 12, 16],
+    ['Newcastle', 160, 80, 80, 24, 12, 12],
+    ['Exeter', 144, 72, 72, 20, 8, 12],
+    ['Glasgow', 120, 48, 72, 16, 8, 8],
+    ['Bath', 100, 60, 40, 12, 8, 4],
+    ['Nottingham', 88, 44, 44, 8, 4, 4],
+    ['Imperial', 72, 36, 36, 4, 0, 4],
+  ];
+  for (const key of TAB_KEYS) {
+    const col = COL_MAP[key];
+    data[key] = sample
+      .map(r => ({ club: r[0], pts: r[col] }))
+      .filter(e => e.pts > 0)
+      .sort((a, b) => b.pts - a.pts);
+  }
+  document.getElementById('updatedTime').innerHTML = '<span class="dot"></span>Demo data';
+  render();
+}
+*/
+
+init();
+</script>
+</body>
+</html>
