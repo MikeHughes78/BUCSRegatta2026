@@ -1733,7 +1733,7 @@ function render() {
 
   if (entries.length === 0) {
     if (data._connected && !data._hasResults) {
-      board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>Sheet connected successfully!<br>No results entered yet — the leaderboard will update automatically once club names are added to the Events sheet.</p></div>';
+      board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>Sheet is connected.<br>No results entered yet, the leaderboard will update automatically once finals are concluded.</p></div>';
     } else if (data._connected) {
       board.innerHTML = '<div class="empty-state"><div class="icon">🏁</div><p>No results in this category yet.<br>Try another tab above.</p></div>';
     } else {
